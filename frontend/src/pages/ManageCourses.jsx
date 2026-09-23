@@ -49,6 +49,7 @@ function ManageCourses() {
 
   const [formData, setFormData] = useState(EMPTY_COURSE);
   const [formError, setFormError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [saving, setSaving] = useState(false);
 
 
@@ -96,6 +97,14 @@ function ManageCourses() {
       ...formData,
       [name]: value,
     });
+
+    // Clear field-level error when user starts typing in that field
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        [name]: undefined,
+      }));
+    }
   };
 
 
@@ -104,6 +113,7 @@ function ManageCourses() {
     setEditingId(null);
     setFormData(EMPTY_COURSE);
     setFormError("");
+    setFieldErrors({});
     setError("");
     setSuccess("");
   };
@@ -125,6 +135,7 @@ function ManageCourses() {
     });
 
     setFormError("");
+    setFieldErrors({});
     setError("");
     setSuccess("");
   };
@@ -135,6 +146,7 @@ function ManageCourses() {
     setEditingId(null);
     setFormData(EMPTY_COURSE);
     setFormError("");
+    setFieldErrors({});
   };
 
 
@@ -144,43 +156,24 @@ function ManageCourses() {
     // Stop the browser from reloading the page
     event.preventDefault();
 
+    if (saving) {
+      return;
+    }
+
     setFormError("");
+    setFieldErrors({});
     setError("");
     setSuccess("");
 
-
-    // ---------- Client side validation ----------
-    if (
-      !formData.title.trim() ||
-      !formData.category.trim() ||
-      !formData.level
-    ) {
-      setFormError("Title, category and level are required.");
-      return;
-    }
-
-    if (!formData.duration.trim()) {
-      setFormError("Duration is required (for example: 8 Weeks).");
-      return;
-    }
-
-    if (formData.price === "" || Number(formData.price) < 0) {
-      setFormError("Please enter a valid price.");
-      return;
-    }
-
-
-    // The backend expects price to be a number
     const coursePayload = {
-      title: formData.title.trim(),
-      category: formData.category.trim(),
+      title: formData.title,
+      category: formData.category,
       level: formData.level,
-      duration: formData.duration.trim(),
-      price: Number(formData.price),
-      image: formData.image.trim(),
-      description: formData.description.trim(),
+      duration: formData.duration,
+      price: formData.price,
+      image: formData.image,
+      description: formData.description,
     };
-
 
     setSaving(true);
 
@@ -212,11 +205,18 @@ function ManageCourses() {
 
     } catch (error) {
 
-      // 400 = the backend rejected the data
-      setFormError(
-        error.response?.data?.message ||
-        "Could not save the course. Please try again."
-      );
+      // 400 = the backend rejected the data with structured errors (FR-011, FR-016)
+      if (error.response?.data?.errors) {
+        setFieldErrors(error.response.data.errors);
+        setFormError(
+          error.response.data.message || "Validation failed. Please correct the highlighted errors."
+        );
+      } else {
+        setFormError(
+          error.response?.data?.message ||
+          "Could not save the course. Please try again."
+        );
+      }
 
     } finally {
 
@@ -318,13 +318,16 @@ function ManageCourses() {
 
                   <input
                     id="title"
-                    className="input"
+                    className={`input ${fieldErrors.title ? "input-error" : ""}`}
                     type="text"
                     name="title"
                     value={formData.title}
                     onChange={handleChange}
                     placeholder="e.g. React"
                   />
+                  {fieldErrors.title && (
+                    <span className="field-error">{fieldErrors.title}</span>
+                  )}
                 </div>
 
 
@@ -333,13 +336,16 @@ function ManageCourses() {
 
                   <input
                     id="category"
-                    className="input"
+                    className={`input ${fieldErrors.category ? "input-error" : ""}`}
                     type="text"
                     name="category"
                     value={formData.category}
                     onChange={handleChange}
                     placeholder="e.g. Frontend"
                   />
+                  {fieldErrors.category && (
+                    <span className="field-error">{fieldErrors.category}</span>
+                  )}
                 </div>
 
               </div>
@@ -352,7 +358,7 @@ function ManageCourses() {
 
                   <select
                     id="level"
-                    className="input"
+                    className={`input ${fieldErrors.level ? "input-error" : ""}`}
                     name="level"
                     value={formData.level}
                     onChange={handleChange}
@@ -363,6 +369,9 @@ function ManageCourses() {
                       </option>
                     ))}
                   </select>
+                  {fieldErrors.level && (
+                    <span className="field-error">{fieldErrors.level}</span>
+                  )}
                 </div>
 
 
@@ -371,13 +380,16 @@ function ManageCourses() {
 
                   <input
                     id="duration"
-                    className="input"
+                    className={`input ${fieldErrors.duration ? "input-error" : ""}`}
                     type="text"
                     name="duration"
                     value={formData.duration}
                     onChange={handleChange}
                     placeholder="e.g. 10 Weeks"
                   />
+                  {fieldErrors.duration && (
+                    <span className="field-error">{fieldErrors.duration}</span>
+                  )}
                 </div>
 
 
@@ -386,15 +398,16 @@ function ManageCourses() {
 
                   <input
                     id="price"
-                    className="input"
-                    type="number"
-                    min="0"
-                    step="0.01"
+                    className={`input ${fieldErrors.price ? "input-error" : ""}`}
+                    type="text"
                     name="price"
                     value={formData.price}
                     onChange={handleChange}
                     placeholder="e.g. 25000"
                   />
+                  {fieldErrors.price && (
+                    <span className="field-error">{fieldErrors.price}</span>
+                  )}
                 </div>
 
               </div>
@@ -405,13 +418,16 @@ function ManageCourses() {
 
                 <input
                   id="image"
-                  className="input"
+                  className={`input ${fieldErrors.image ? "input-error" : ""}`}
                   type="text"
                   name="image"
                   value={formData.image}
                   onChange={handleChange}
                   placeholder="https://placehold.co/300x180?text=React"
                 />
+                {fieldErrors.image && (
+                  <span className="field-error">{fieldErrors.image}</span>
+                )}
               </div>
 
 
@@ -420,13 +436,16 @@ function ManageCourses() {
 
                 <textarea
                   id="description"
-                  className="input"
+                  className={`input ${fieldErrors.description ? "input-error" : ""}`}
                   rows="4"
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
                   placeholder="Short summary of what students will learn."
                 />
+                {fieldErrors.description && (
+                  <span className="field-error">{fieldErrors.description}</span>
+                )}
               </div>
 
 

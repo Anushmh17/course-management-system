@@ -23,6 +23,21 @@ const Course = {
   },
 
 
+  // Find course by title (optionally excluding a course ID for updates)
+  async getByTitle(title, excludeId = null) {
+    let query = "SELECT * FROM courses WHERE LOWER(title) = LOWER(?)";
+    const params = [title];
+
+    if (excludeId !== null && excludeId !== undefined) {
+      query += " AND id != ?";
+      params.push(excludeId);
+    }
+
+    const [rows] = await db.execute(query, params);
+    return rows[0] || null;
+  },
+
+
   // Create course
   async create(course) {
 
