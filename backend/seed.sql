@@ -1,29 +1,40 @@
 USE course_management;
 
+-- Reset tables to start fresh IDs
+SET FOREIGN_KEY_CHECKS = 0;
+TRUNCATE TABLE enrollments;
+TRUNCATE TABLE courses;
+TRUNCATE TABLE users;
+SET FOREIGN_KEY_CHECKS = 1;
+
 
 -- Seed Users
 INSERT INTO users
-(username, password, full_name, role)
+(id, username, password, full_name, role)
 VALUES
 (
+    1,
     'admin',
     '$2b$10$C5S4lHqwweU5DK0S5GCQQe0oRcYsTL3Q56Pt0v4OymtoX.X8VGj2G',
     'System Administrator',
     'admin'
 ),
 (
+    2,
     'kamal',
     '$2b$10$C5S4lHqwweU5DK0S5GCQQe0oRcYsTL3Q56Pt0v4OymtoX.X8VGj2G',
     'Kamal Perera',
     'student'
 ),
 (
+    3,
     'nimal',
     '$2b$10$C5S4lHqwweU5DK0S5GCQQe0oRcYsTL3Q56Pt0v4OymtoX.X8VGj2G',
     'Nimal Silva',
     'student'
 ),
 (
+    4,
     'saman',
     '$2b$10$C5S4lHqwweU5DK0S5GCQQe0oRcYsTL3Q56Pt0v4OymtoX.X8VGj2G',
     'Saman Fernando',
@@ -31,12 +42,15 @@ VALUES
 );
 
 
--- Seed Courses
+-- Seed Courses (Matches Test Evidence B-01 and B-02)
+-- B-01 (TC-001/TC-003): Course ID 1 matches "C001" or "1" as single record
+-- B-02 (TC-012): Prices 5000, 15000, 25000, 100000 sort in exact ascending numerical order
 INSERT INTO courses
-(title, category, level, duration, price, image, description)
+(id, title, category, level, duration, price, image, description)
 VALUES
 
 (
+    1,
     'HTML & CSS',
     'Frontend',
     'Beginner',
@@ -47,59 +61,21 @@ VALUES
 ),
 
 (
-    'JavaScript',
-    'Frontend',
-    'Intermediate',
-    '10 Weeks',
-    18000,
-    'https://placehold.co/300x180?text=JavaScript',
-    'Master JavaScript, the DOM, events, ES6 features, and asynchronous programming.'
-),
-
-(
-    'Node.js',
-    'Backend',
-    'Intermediate',
-    '12 Weeks',
-    22000,
-    'https://placehold.co/300x180?text=Node.js',
-    'Build fast and scalable server-side applications using Node.js.'
-),
-
-(
-    'Express.js',
-    'Backend',
-    'Advanced',
-    '8 Weeks',
-    20000,
-    'https://placehold.co/300x180?text=Express.js',
-    'Create RESTful APIs and web applications using the Express framework.'
-),
-
-(
-    'MongoDB',
-    'Database',
-    'Intermediate',
-    '6 Weeks',
-    17000,
-    'https://placehold.co/300x180?text=MongoDB',
-    'Learn NoSQL database design, CRUD operations, and MongoDB integration.'
-),
-
-(
-    'MySQL',
-    'Database',
+    2,
+    'Git & GitHub',
+    'DevOps',
     'Beginner',
-    '6 Weeks',
-    16000,
-    'https://placehold.co/300x180?text=MySQL',
-    'Understand relational databases, SQL queries, joins, and database normalization.'
+    '4 Weeks',
+    5000,
+    'https://placehold.co/300x180?text=Git+%26+GitHub',
+    'Master version control, branches, pull requests, and collaborative workflows.'
 ),
 
 (
+    3,
     'React',
     'Frontend',
-    'Advanced',
+    'Intermediate',
     '10 Weeks',
     25000,
     'https://placehold.co/300x180?text=React',
@@ -107,48 +83,22 @@ VALUES
 ),
 
 (
+    4,
     'Full Stack Web Development',
     'Full Stack',
     'Advanced',
     '20 Weeks',
-    45000,
+    100000,
     'https://placehold.co/300x180?text=Full+Stack',
     'Combine frontend, backend, databases, authentication, and deployment into one complete project.'
 );
 
 
 -- Seed Enrollments
-
--- User IDs:
--- 1 = admin
--- 2 = Kamal Perera
--- 3 = Nimal Silva
--- 4 = Saman Fernando
---
--- Course IDs:
--- 1 = HTML & CSS
--- 2 = JavaScript
--- 3 = Node.js
--- 4 = Express.js
--- 5 = MongoDB
--- 6 = MySQL
--- 7 = React
--- 8 = Full Stack Web Development
-
-
 INSERT INTO enrollments
 (student_id, course_id)
 VALUES
-
--- Kamal
 (2, 1),   -- Kamal -> HTML & CSS
-(2, 2),   -- Kamal -> JavaScript
-(2, 6),   -- Kamal -> MySQL
-
--- Nimal
-(3, 3),   -- Nimal -> Node.js
-(3, 4),   -- Nimal -> Express.js
-
--- Saman
-(4, 2),   -- Saman -> JavaScript
-(4, 7);   -- Saman -> React
+(2, 2),   -- Kamal -> Git & GitHub
+(3, 3),   -- Nimal -> React
+(4, 4);   -- Saman -> Full Stack Web Development
