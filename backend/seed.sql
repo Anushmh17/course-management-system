@@ -1,10 +1,13 @@
 USE course_management;
 
--- Reset tables to start fresh IDs
+-- Reset tables safely (avoids error #1701 in phpMyAdmin/InnoDB)
 SET FOREIGN_KEY_CHECKS = 0;
-TRUNCATE TABLE enrollments;
-TRUNCATE TABLE courses;
-TRUNCATE TABLE users;
+DELETE FROM enrollments;
+DELETE FROM courses;
+DELETE FROM users;
+ALTER TABLE enrollments AUTO_INCREMENT = 1;
+ALTER TABLE courses AUTO_INCREMENT = 1;
+ALTER TABLE users AUTO_INCREMENT = 1;
 SET FOREIGN_KEY_CHECKS = 1;
 
 
