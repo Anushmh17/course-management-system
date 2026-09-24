@@ -19,6 +19,10 @@ function CourseCard({ course }) {
       <div className="course-card-body">
 
         <div className="course-card-tags">
+          <span className="tag tag-id">
+            {`C${String(course.id).padStart(3, "0")}`}
+          </span>
+
           <span className="tag tag-category">
             {course.category}
           </span>

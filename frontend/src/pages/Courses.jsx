@@ -5,6 +5,44 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import CourseCard from "../components/CourseCard";
 
+// Check if course ID matches search term (supports raw ID, numbers, and padded codes like C001, C1)
+function matchesCourseId(courseId, term) {
+  if (courseId === undefined || courseId === null) return false;
+  const rawIdStr = String(courseId).trim().toLowerCase();
+  if (rawIdStr === term) return true;
+
+  const numericMatch = rawIdStr.match(/\d+/);
+  if (numericMatch) {
+    const numVal = parseInt(numericMatch[0], 10);
+    const padded3 = `c${String(numVal).padStart(3, "0")}`;
+    const padded4 = `c${String(numVal).padStart(4, "0")}`;
+    const prefixed = `c${numVal}`;
+    const padOnly3 = String(numVal).padStart(3, "0");
+    const padOnly4 = String(numVal).padStart(4, "0");
+
+    if (
+      padded3 === term ||
+      padded4 === term ||
+      prefixed === term ||
+      padded3.includes(term) ||
+      padded4.includes(term) ||
+      prefixed.includes(term) ||
+      padOnly3 === term ||
+      padOnly4 === term
+    ) {
+      return true;
+    }
+  }
+
+  const termDigitsMatch = term.match(/^c0*(\d+)$/);
+  if (termDigitsMatch) {
+    const termNum = termDigitsMatch[1];
+    if (rawIdStr === termNum) return true;
+  }
+
+  return false;
+}
+
 function Courses() {
   const [courses, setCourses] = useState([]);
 
@@ -68,9 +106,13 @@ function Courses() {
 
     const search = searchText.trim().toLowerCase();
 
-    // Search title, category, level, description and duration
+    // Check course ID match (e.g., C001, C1, 1)
+    const matchesId = matchesCourseId(course.id, search);
+
+    // Search title, category, level, description, duration, and course ID
     const matchesSearch =
       !search ||
+      matchesId ||
       title.toLowerCase().includes(search) ||
       category.toLowerCase().includes(search) ||
       level.toLowerCase().includes(search) ||
@@ -152,7 +194,7 @@ function Courses() {
             <input
               type="text"
               className="input"
-              placeholder="Search by title, category, level, description or duration..."
+              placeholder="Search by title, category, course ID (e.g. C001), level, description or duration..."
               value={searchText}
               onChange={(event) =>
                 setSearchText(event.target.value)
