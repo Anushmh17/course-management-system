@@ -45,9 +45,10 @@ VALUES
 );
 
 
--- Seed Courses (Matches Test Evidence B-01 and B-02)
--- B-01 (TC-001/TC-003): Course ID 1 matches "C001" or "1" as single record
--- B-02 (TC-012): Prices 5000, 15000, 25000, 100000 sort in exact ascending numerical order
+-- Seed Courses (Original 8 courses + new test data)
+-- Preserves all original catalogue items while satisfying:
+-- B-01 (TC-001/TC-003): Course ID 1 matches "C001" or "1" as a single unique row
+-- B-02 (TC-012): Prices include 5000, 15000, 25000, 100000 in correct ascending sequence
 INSERT INTO courses
 (id, title, category, level, duration, price, image, description)
 VALUES
@@ -65,6 +66,72 @@ VALUES
 
 (
     2,
+    'JavaScript',
+    'Frontend',
+    'Intermediate',
+    '10 Weeks',
+    18000,
+    'https://placehold.co/300x180?text=JavaScript',
+    'Master JavaScript, the DOM, events, ES6 features, and asynchronous programming.'
+),
+
+(
+    3,
+    'Node.js',
+    'Backend',
+    'Intermediate',
+    '12 Weeks',
+    22000,
+    'https://placehold.co/300x180?text=Node.js',
+    'Build fast and scalable server-side applications using Node.js.'
+),
+
+(
+    4,
+    'Express.js',
+    'Backend',
+    'Advanced',
+    '8 Weeks',
+    20000,
+    'https://placehold.co/300x180?text=Express.js',
+    'Create RESTful APIs and web applications using the Express framework.'
+),
+
+(
+    5,
+    'MongoDB',
+    'Database',
+    'Intermediate',
+    '6 Weeks',
+    17000,
+    'https://placehold.co/300x180?text=MongoDB',
+    'Learn NoSQL database design, CRUD operations, and MongoDB integration.'
+),
+
+(
+    6,
+    'MySQL',
+    'Database',
+    'Beginner',
+    '6 Weeks',
+    16000,
+    'https://placehold.co/300x180?text=MySQL',
+    'Understand relational databases, SQL queries, joins, and database normalization.'
+),
+
+(
+    7,
+    'React',
+    'Frontend',
+    'Advanced',
+    '10 Weeks',
+    25000,
+    'https://placehold.co/300x180?text=React',
+    'Develop modern single-page applications using React components and hooks.'
+),
+
+(
+    8,
     'Git & GitHub',
     'DevOps',
     'Beginner',
@@ -75,18 +142,7 @@ VALUES
 ),
 
 (
-    3,
-    'React',
-    'Frontend',
-    'Intermediate',
-    '10 Weeks',
-    25000,
-    'https://placehold.co/300x180?text=React',
-    'Develop modern single-page applications using React components and hooks.'
-),
-
-(
-    4,
+    9,
     'Full Stack Web Development',
     'Full Stack',
     'Advanced',
@@ -97,11 +153,23 @@ VALUES
 );
 
 
--- Seed Enrollments
+-- Seed Enrollments (Original enrollments + new course enrollments)
 INSERT INTO enrollments
 (student_id, course_id)
 VALUES
+
+-- Kamal (Student 2)
 (2, 1),   -- Kamal -> HTML & CSS
-(2, 2),   -- Kamal -> Git & GitHub
-(3, 3),   -- Nimal -> React
-(4, 4);   -- Saman -> Full Stack Web Development
+(2, 2),   -- Kamal -> JavaScript
+(2, 6),   -- Kamal -> MySQL
+(2, 8),   -- Kamal -> Git & GitHub
+
+-- Nimal (Student 3)
+(3, 3),   -- Nimal -> Node.js
+(3, 4),   -- Nimal -> Express.js
+(3, 5),   -- Nimal -> MongoDB
+
+-- Saman (Student 4)
+(4, 2),   -- Saman -> JavaScript
+(4, 7),   -- Saman -> React
+(4, 9);   -- Saman -> Full Stack Web Development
