@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useEffect } from "react";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 
 // ---------- Public pages ----------
 import Home from "./pages/Home";
@@ -21,13 +22,36 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 import "./App.css";
 
+function SessionExpiredListener() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleExpired = (event) => {
+      const from = event.detail?.from;
+      navigate("/login", {
+        state: { from, sessionExpired: true },
+        replace: true,
+      });
+    };
+
+    window.addEventListener("cms:session_expired", handleExpired);
+    return () => {
+      window.removeEventListener("cms:session_expired", handleExpired);
+    };
+  }, [navigate]);
+
+  return null;
+}
+
 function App() {
 
   return (
 
     <BrowserRouter>
+      <SessionExpiredListener />
 
       <Routes>
+
 
         {/* PUBLIC ROUTES - no login needed */}
 

@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { FaSearch, FaSignInAlt } from "react-icons/fa";
+import { FaSearch, FaSignInAlt, FaExclamationTriangle } from "react-icons/fa";
+
 
 import api from "../services/api";
 import { saveAuth } from "../services/auth";
 import Navbar from "../components/Navbar";
 
-
 function Login() {
-
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
@@ -18,11 +17,29 @@ function Login() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const redirectTo = location.state?.from;
+  // Read preserved original destination from router state or sessionStorage
+  const redirectTo =
+    location.state?.from || sessionStorage.getItem("redirect_to");
+
+  // Determine initial session-expired message without cascading effect render
+  const [sessionExpiredMsg, setSessionExpiredMsg] = useState(() => {
+    try {
+      const isExpired = Boolean(
+        location.state?.sessionExpired ||
+        sessionStorage.getItem("session_expired") === "true"
+      );
+      if (isExpired) {
+        sessionStorage.removeItem("session_expired");
+        return "Your session has expired. Please log in again.";
+      }
+    } catch {
+      // Ignore storage errors
+    }
+    return "";
+  });
 
 
   const handleSubmit = async (event) => {
-
     // Stop the browser from reloading the whole page
     event.preventDefault();
 
@@ -37,82 +54,94 @@ function Login() {
     setLoading(true);
 
     try {
-
       const response = await api.post("/auth/login", {
         username,
         password,
       });
 
+      // Clear any session expired notification once login succeeds
+      setSessionExpiredMsg("");
+      try {
+        sessionStorage.removeItem("session_expired");
+        sessionStorage.removeItem("redirect_to");
+      } catch {
+        // Ignore storage errors
+      }
 
       // ---------- Save the JWT and the user ----------
       saveAuth(response.data.token, response.data.user);
 
-
       // ---------- Redirect after successful login ----------
-
       const role = response.data.user.role;
 
       if (redirectTo && !redirectTo.startsWith("/login")) {
-
         // Return to the page the user originally wanted
-        navigate(redirectTo);
-
+        navigate(redirectTo, { replace: true });
       } else if (role === "admin") {
-
         // Normal admin login
         navigate("/admin");
-
       } else {
-
         // Normal student login
         navigate("/student");
-
       }
-
-    } catch (error) {
+    } catch (err) {
+      // Normal login failure must clear session expired message and show invalid credentials
+      setSessionExpiredMsg("");
 
       // error.response exists when the SERVER answered (400, 401, 500).
-      // It is undefined when the request never reached the server.
-      if (error.response) {
-
-        setError(
-          error.response.data?.message ||
-          `Login failed (status ${error.response.status})`
-        );
-
+      if (err.response) {
+        if (err.response.status === 401) {
+          setError("Invalid username or password");
+        } else {
+          setError(
+            err.response.data?.message ||
+              `Login failed (status ${err.response.status})`
+          );
+        }
       } else {
-
         setError(
           "Cannot reach the server. Please check that the backend is running on http://localhost:3000"
         );
-
       }
-
     } finally {
-
       // Always stop the loading state, success or failure
       setLoading(false);
-
     }
   };
 
-
   return (
-
     <>
       <Navbar />
 
       <div className="login-container">
-
         <h1>Login</h1>
 
-        <p className="login-subtitle">
-          Sign in to enroll in courses.
-        </p>
+        <p className="login-subtitle">Sign in to enroll in courses.</p>
 
+        {sessionExpiredMsg && (
+          <div
+            className="session-expired-alert"
+            role="alert"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "12px 16px",
+              marginBottom: "16px",
+              backgroundColor: "#fff3cd",
+              border: "1px solid #ffeeba",
+              borderRadius: "6px",
+              color: "#856404",
+              fontSize: "14px",
+              fontWeight: "500",
+            }}
+          >
+            <FaExclamationTriangle />
+            <span>{sessionExpiredMsg}</span>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
-
           <div className="form-group">
             <label htmlFor="username">Username</label>
 
@@ -126,7 +155,6 @@ function Login() {
               disabled={loading}
             />
           </div>
-
 
           <div className="form-group">
             <label htmlFor="password">Password</label>
@@ -142,11 +170,7 @@ function Login() {
             />
           </div>
 
-
-          {error && (
-            <p className="error">{error}</p>
-          )}
-
+          {error && <p className="error">{error}</p>}
 
           <button
             type="submit"
@@ -156,19 +180,19 @@ function Login() {
             <FaSignInAlt />
             {loading ? "Logging in..." : "Login"}
           </button>
-
         </form>
-
 
         <p className="login-footer">
           Not sure where to go?{" "}
-          <Link to="/courses"><FaSearch /> Browse the courses</Link> first.
+          <Link to="/courses">
+            <FaSearch /> Browse the courses
+          </Link>{" "}
+          first.
         </p>
-
       </div>
-
     </>
   );
 }
 
 export default Login;
+
