@@ -677,6 +677,66 @@ a:hover {
   color: #475569;
 }
 
+.tag-full {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.tag-full-lg {
+  font-size: 0.85rem;
+  padding: 5px 14px;
+}
+
+.tag-sm {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+}
+
+.course-card-image-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+
+.course-full-badge-overlay {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: #dc2626;
+  color: #ffffff;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: var(--radius-sm, 4px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.availability-full-label {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.course-full-message {
+  color: var(--color-danger, #dc2626);
+  font-weight: 500;
+  margin: 6px 0;
+}
+
+.btn-disabled {
+  background-color: #e2e8f0;
+  color: #94a3b8;
+  border-color: #cbd5e1;
+  cursor: not-allowed;
+}
+
+.btn-disabled:hover {
+  background-color: #e2e8f0;
+  color: #94a3b8;
+  border-color: #cbd5e1;
+}
+
 .role-badge {
   display: inline-block;
 

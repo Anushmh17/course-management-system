@@ -21,6 +21,7 @@ const EMPTY_COURSE = {
   price: "",
   image: "",
   description: "",
+  max_students: "",
 };
 
 const LEVEL_OPTIONS = ["Beginner", "Intermediate", "Advanced"];
@@ -170,6 +171,10 @@ function ManageCourses() {
       price: String(course.price ?? ""),
       image: course.image || "",
       description: course.description || "",
+      max_students:
+        course.max_students !== null && course.max_students !== undefined
+          ? String(course.max_students)
+          : "",
     });
 
     setFormError("");
@@ -207,6 +212,12 @@ function ManageCourses() {
       price: formData.price,
       image: formData.image,
       description: formData.description,
+      max_students:
+        formData.max_students !== "" &&
+        formData.max_students !== null &&
+        formData.max_students !== undefined
+          ? formData.max_students
+          : null,
     };
 
     setSaving(true);
@@ -359,6 +370,19 @@ function ManageCourses() {
         const priceA = parseFloat(a.price) || 0;
         const priceB = parseFloat(b.price) || 0;
         comparison = priceA - priceB;
+        break;
+      }
+
+      case "capacity": {
+        const capA =
+          a.max_students !== null && a.max_students !== undefined
+            ? Number(a.max_students)
+            : Infinity;
+        const capB =
+          b.max_students !== null && b.max_students !== undefined
+            ? Number(b.max_students)
+            : Infinity;
+        comparison = capA - capB;
         break;
       }
 
@@ -520,6 +544,24 @@ function ManageCourses() {
                   />
                   {fieldErrors.price && (
                     <span className="field-error">{fieldErrors.price}</span>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="max_students">Maximum Students</label>
+                  <input
+                    id="max_students"
+                    className={`input ${fieldErrors.max_students ? "input-error" : ""}`}
+                    type="number"
+                    min="1"
+                    step="1"
+                    name="max_students"
+                    value={formData.max_students}
+                    onChange={handleChange}
+                    placeholder="Leave blank for unlimited"
+                  />
+                  {fieldErrors.max_students && (
+                    <span className="field-error">{fieldErrors.max_students}</span>
                   )}
                 </div>
               </div>
@@ -770,6 +812,21 @@ function ManageCourses() {
                           Price {renderSortIndicator("price")}
                         </th>
 
+                        <th
+                          className="th-sortable"
+                          onClick={() => handleSort("capacity")}
+                          title="Sort by Availability"
+                          aria-sort={
+                            sortColumn === "capacity"
+                              ? sortDirection === "asc"
+                                ? "ascending"
+                                : "descending"
+                              : "none"
+                          }
+                        >
+                          Availability {renderSortIndicator("capacity")}
+                        </th>
+
                         <th className="table-actions-column">Actions</th>
                       </tr>
                     </thead>
@@ -800,6 +857,21 @@ function ManageCourses() {
                           <td>{course.duration}</td>
 
                           <td>Rs. {course.price}</td>
+
+                          <td>
+                            {course.max_students !== null && course.max_students !== undefined ? (
+                              <span>
+                                {course.enrolled_count} / {course.max_students} students
+                                {course.is_full && (
+                                  <span className="tag tag-full tag-sm" style={{ marginLeft: "6px" }}>
+                                    Course Full
+                                  </span>
+                                )}
+                              </span>
+                            ) : (
+                              <span>Unlimited</span>
+                            )}
+                          </td>
 
                           <td>
                             <div className="table-actions">

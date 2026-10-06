@@ -100,16 +100,25 @@ function CourseDetails() {
       setIsEnrolled(true);
       setEnrollmentId(response.data.enrollmentId);
 
+      // Refresh course state to reflect recalculated availability (FR-036)
+      const courseRes = await api.get(`/courses/${id}`);
+      setCourse(courseRes.data.course);
+
     } catch (err) {
 
-      // 409 = already enrolled. This is expected, not a crash.
       if (err.response?.status === 409) {
-
-        setError(
-          "You are already enrolled in this course. You can see it in My Enrollments."
-        );
-        setIsEnrolled(true);
-
+        const msg = err.response?.data?.message || "";
+        if (msg.toLowerCase().includes("full")) {
+          // Course is full (FR-029, FR-030)
+          setError(msg);
+          // Refresh course state
+          api.get(`/courses/${id}`).then((res) => setCourse(res.data.course)).catch(() => {});
+        } else {
+          setError(
+            "You are already enrolled in this course. You can see it in My Enrollments."
+          );
+          setIsEnrolled(true);
+        }
       } else {
 
         setError(
@@ -145,6 +154,10 @@ function CourseDetails() {
       setSuccess(res.data?.message || "Enrollment cancelled successfully.");
       setIsEnrolled(false);
       setEnrollmentId(null);
+
+      // Refresh course state after cancellation (seat released) (FR-035, FR-036)
+      const courseRes = await api.get(`/courses/${id}`);
+      setCourse(courseRes.data.course);
     } catch (err) {
       setError(
         err.response?.data?.message ||
@@ -226,6 +239,9 @@ function CourseDetails() {
             <div className="course-card-tags">
               <span className="tag tag-category">{course.category}</span>
               <span className="tag tag-level">{course.level}</span>
+              {course.is_full && (
+                <span className="tag tag-full">Course Full</span>
+              )}
             </div>
 
 
@@ -257,6 +273,20 @@ function CourseDetails() {
                 <dd className="details-price">Rs. {course.price}</dd>
               </div>
 
+              <div>
+                <dt>Availability</dt>
+                <dd className="details-availability">
+                  {course.max_students !== null && course.max_students !== undefined
+                    ? `${course.enrolled_count} / ${course.max_students} students`
+                    : "Unlimited"}
+                  {course.is_full && (
+                    <span className="tag tag-full" style={{ marginLeft: "8px" }}>
+                      Course Full
+                    </span>
+                  )}
+                </dd>
+              </div>
+
             </dl>
 
 
@@ -275,23 +305,36 @@ function CourseDetails() {
               {/* Not logged in: invite the visitor to login */}
               {!loggedIn && (
                 <div className="notice">
-                  <p>
-                    Please login as a student to enroll in this course.
-                  </p>
+                  {course.is_full ? (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                      <div>
+                        <span className="tag tag-full tag-full-lg">Course Full</span>
+                      </div>
+                      <p>
+                        This course is currently full ({course.enrolled_count} / {course.max_students} students). No remaining seats are available.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <p>
+                        Please login as a student to enroll in this course.
+                      </p>
 
-                  <Link
-                    to="/login"
-                    state={{ from: location.pathname }}
-                    className="btn btn-primary"
-                  >
-                    <FaSignInAlt />
-                    Login to Enroll
-                  </Link>
+                      <Link
+                        to="/login"
+                        state={{ from: location.pathname }}
+                        className="btn btn-primary"
+                      >
+                        <FaSignInAlt />
+                        Login to Enroll
+                      </Link>
+                    </>
+                  )}
                 </div>
               )}
 
 
-              {/* Logged in as a student: show enrolled or enroll button */}
+              {/* Logged in as a student: show enrolled or enroll button or full state */}
               {studentLoggedIn && (
                 <>
                   {isEnrolled ? (
@@ -327,6 +370,28 @@ function CourseDetails() {
                         >
                           {cancelling ? "Cancelling..." : "Cancel Enrollment"}
                         </button>
+                      </div>
+                    </div>
+                  ) : course.is_full ? (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                      <div>
+                        <span className="tag tag-full tag-full-lg">Course Full</span>
+                      </div>
+                      <p className="course-full-message">
+                        This course is full ({course.enrolled_count} / {course.max_students} students). No seats are remaining.
+                      </p>
+                      <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-lg btn-disabled"
+                          disabled
+                        >
+                          Course Full
+                        </button>
+                        <Link to="/my-enrollments" className="btn btn-outline">
+                          <FaGraduationCap />
+                          My Enrollments
+                        </Link>
                       </div>
                     </div>
                   ) : (

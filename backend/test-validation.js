@@ -19,6 +19,12 @@ Course.getByTitle = async (title, excludeId = null) => {
   return found;
 };
 
+// In-memory mock for Course.getEnrollmentCount (Course 1 has 10 enrollments)
+Course.getEnrollmentCount = async (courseId) => {
+  if (Number(courseId) === 1) return 10;
+  return 0;
+};
+
 async function runTests() {
   console.log("Running Course Validation Tests...\n");
 
@@ -285,8 +291,141 @@ async function runTests() {
     console.log("✓ Test 10 Passed: Duplicate title handling for Create and Update (FR-009, AC-009)");
   }
 
+  // Test 11: Optional capacity & blank capacity stored as NULL (FR-002, FR-004, AC-001, AC-004)
+  {
+    const resBlank = await validateCourse({
+      title: "Full Stack Development",
+      category: "Frontend",
+      level: "Beginner",
+      duration: "5 Weeks",
+      price: 15000,
+      max_students: "   ",
+    });
+    assert.strictEqual(resBlank.isValid, true);
+    assert.strictEqual(resBlank.data.max_students, null, "Blank max_students should be stored as null");
+
+    const resNull = await validateCourse({
+      title: "Full Stack Development",
+      category: "Frontend",
+      level: "Beginner",
+      duration: "5 Weeks",
+      price: 15000,
+      max_students: null,
+    });
+    assert.strictEqual(resNull.isValid, true);
+    assert.strictEqual(resNull.data.max_students, null, "Null max_students should be stored as null");
+
+    const resValid = await validateCourse({
+      title: "Full Stack Development",
+      category: "Frontend",
+      level: "Beginner",
+      duration: "5 Weeks",
+      price: 15000,
+      max_students: "30",
+    });
+    assert.strictEqual(resValid.isValid, true);
+    assert.strictEqual(resValid.data.max_students, 30, "Valid integer max_students should be parsed as number");
+    console.log("✓ Test 11 Passed: Optional capacity & blank capacity stored as NULL (FR-002, FR-004, AC-004)");
+  }
+
+  // Test 12: Positive capacity enforcement - 0, negative, decimal, non-numeric rejected (FR-003, AC-003, AC-026)
+  {
+    const invalidCapacities = [
+      0,
+      "0",
+      -5,
+      "-5",
+      12.5,
+      "12.5",
+      "abc",
+      true,
+      false,
+    ];
+
+    for (const val of invalidCapacities) {
+      const res = await validateCourse({
+        title: "Test Course",
+        category: "Test",
+        level: "Beginner",
+        duration: "5 Weeks",
+        price: 1000,
+        max_students: val,
+      });
+      assert.strictEqual(
+        res.isValid,
+        false,
+        `Capacity "${val}" should be rejected`
+      );
+      assert.strictEqual(
+        res.errors.max_students,
+        "Maximum students must be a positive integer"
+      );
+    }
+    console.log("✓ Test 12 Passed: Positive capacity enforced; 0, negatives, decimals, non-numeric rejected (FR-003, AC-026)");
+  }
+
+  // Test 13: Administrator capacity reduction below approved enrollment rejected (FR-014, SEC-007, AC-027)
+  {
+    // Course 1 has 10 enrollments in mockDatabase
+    const res = await validateCourse(
+      {
+        title: "Web Development",
+        category: "Frontend",
+        level: "Beginner",
+        duration: "5 Weeks",
+        price: 1000,
+        max_students: 9,
+      },
+      1
+    );
+    assert.strictEqual(res.isValid, false);
+    assert.strictEqual(
+      res.errors.max_students,
+      "Capacity cannot be less than the current enrollment count (10)"
+    );
+    console.log("✓ Test 13 Passed: Reducing capacity below approved enrollment count rejected (FR-014, AC-027)");
+  }
+
+  // Test 14: Administrator setting capacity equal to approved enrollment allowed (FR-015, AC-028)
+  {
+    // Course 1 has 10 enrollments; new capacity 10 should be allowed
+    const res = await validateCourse(
+      {
+        title: "Web Development",
+        category: "Frontend",
+        level: "Beginner",
+        duration: "5 Weeks",
+        price: 1000,
+        max_students: 10,
+      },
+      1
+    );
+    assert.strictEqual(res.isValid, true);
+    assert.strictEqual(res.data.max_students, 10);
+    console.log("✓ Test 14 Passed: Capacity equal to approved enrollment count allowed (FR-015, AC-028)");
+  }
+
+  // Test 15: Administrator clearing capacity to restore unlimited allowed (FR-016, AC-029)
+  {
+    // Course 1 has 10 enrollments; clearing capacity (blank) should be allowed
+    const res = await validateCourse(
+      {
+        title: "Web Development",
+        category: "Frontend",
+        level: "Beginner",
+        duration: "5 Weeks",
+        price: 1000,
+        max_students: "",
+      },
+      1
+    );
+    assert.strictEqual(res.isValid, true);
+    assert.strictEqual(res.data.max_students, null);
+    console.log("✓ Test 15 Passed: Administrator clearing capacity to restore unlimited allowed (FR-016, AC-029)");
+  }
+
   console.log("\n========================================================");
-  console.log("ALL 10 VALIDATION UNIT TESTS PASSED WITH 100% SUCCESS! ✨");
+  console.log("ALL 15 VALIDATION UNIT TESTS PASSED WITH 100% SUCCESS! ✨");
   console.log("========================================================");
   process.exit(0);
 }

@@ -52,7 +52,7 @@ VALUES
 -- Includes "2 Months" duration (Section 9.3, TC-020 duration sort)
 -- Includes prices 5000, 15000, 25000, 50000, 100000 (TC-012, Evidence B-02)
 INSERT INTO courses
-(id, title, category, level, duration, price, image, description)
+(id, title, category, level, duration, price, image, description, max_students)
 VALUES
 
 (
@@ -63,7 +63,8 @@ VALUES
     '8 Weeks',
     15000,
     'https://placehold.co/300x180?text=HTML+%26+CSS',
-    'Learn the fundamentals of HTML5 and CSS3 to build modern, responsive websites.'
+    'Learn the fundamentals of HTML5 and CSS3 to build modern, responsive websites.',
+    NULL
 ),
 
 (
@@ -74,7 +75,8 @@ VALUES
     '10 Weeks',
     18000,
     'https://placehold.co/300x180?text=JavaScript',
-    'Master JavaScript, the DOM, events, ES6 features, and asynchronous programming.'
+    'Master JavaScript, the DOM, events, ES6 features, and asynchronous programming.',
+    2
 ),
 
 (
@@ -85,7 +87,8 @@ VALUES
     '12 Weeks',
     22000,
     'https://placehold.co/300x180?text=Node.js',
-    'Build fast and scalable server-side applications using Node.js.'
+    'Build fast and scalable server-side applications using Node.js.',
+    NULL
 ),
 
 (
@@ -96,7 +99,8 @@ VALUES
     '8 Weeks',
     20000,
     'https://placehold.co/300x180?text=Express.js',
-    'Create RESTful APIs and web applications using the Express framework.'
+    'Create RESTful APIs and web applications using the Express framework.',
+    5
 ),
 
 (
@@ -107,7 +111,8 @@ VALUES
     '6 Weeks',
     17000,
     'https://placehold.co/300x180?text=MongoDB',
-    'Learn NoSQL database design, CRUD operations, and MongoDB integration.'
+    'Learn NoSQL database design, CRUD operations, and MongoDB integration.',
+    NULL
 ),
 
 (
@@ -118,7 +123,8 @@ VALUES
     '6 Weeks',
     16000,
     'https://placehold.co/300x180?text=MySQL',
-    'Understand relational databases, SQL queries, joins, and database normalization.'
+    'Understand relational databases, SQL queries, joins, and database normalization.',
+    NULL
 ),
 
 (
@@ -129,7 +135,8 @@ VALUES
     '10 Weeks',
     25000,
     'https://placehold.co/300x180?text=React',
-    'Develop modern single-page applications using React components and hooks.'
+    'Develop modern single-page applications using React components and hooks.',
+    NULL
 ),
 
 (
@@ -140,7 +147,8 @@ VALUES
     '4 Weeks',
     5000,
     'https://placehold.co/300x180?text=Git+%26+GitHub',
-    'Master version control, branches, pull requests, and collaborative workflows.'
+    'Master version control, branches, pull requests, and collaborative workflows.',
+    NULL
 ),
 
 (
@@ -151,7 +159,8 @@ VALUES
     '2 Months',
     50000,
     'https://placehold.co/300x180?text=Python',
-    'Learn Python programming from scratch including data structures, OOP, and automation.'
+    'Learn Python programming from scratch including data structures, OOP, and automation.',
+    NULL
 ),
 
 (
@@ -162,7 +171,8 @@ VALUES
     '20 Weeks',
     100000,
     'https://placehold.co/300x180?text=Full+Stack',
-    'Combine frontend, backend, databases, authentication, and deployment into one complete project.'
+    'Combine frontend, backend, databases, authentication, and deployment into one complete project.',
+    NULL
 );
 
 

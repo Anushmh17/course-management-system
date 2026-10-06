@@ -109,7 +109,13 @@ function Courses() {
     // Check course ID match (e.g., C001, C1, 1)
     const matchesId = matchesCourseId(course.id, search);
 
-    // Search title, category, level, description, duration, and course ID
+    const isLimited = course.max_students !== null && course.max_students !== undefined;
+    const availabilityStr = isLimited
+      ? `${course.enrolled_count} / ${course.max_students} students`
+      : "unlimited";
+    const fullStr = course.is_full ? "course full" : "";
+
+    // Search title, category, level, description, duration, course ID, and availability
     const matchesSearch =
       !search ||
       matchesId ||
@@ -117,7 +123,9 @@ function Courses() {
       category.toLowerCase().includes(search) ||
       level.toLowerCase().includes(search) ||
       description.toLowerCase().includes(search) ||
-      duration.toLowerCase().includes(search);
+      duration.toLowerCase().includes(search) ||
+      availabilityStr.toLowerCase().includes(search) ||
+      fullStr.includes(search);
 
     // Category filter
     const matchesCategory =

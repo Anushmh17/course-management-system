@@ -1,7 +1,7 @@
 const Enrollment = require("../models/enrollmentModel");
 const Course = require("../models/courseModel");
 
-// Enroll in a course
+// Enroll in a course (with atomic capacity checking and concurrency protection)
 const enrollInCourse = async (req, res) => {
   try {
     const { courseId } = req.body;
@@ -16,37 +16,21 @@ const enrollInCourse = async (req, res) => {
       });
     }
 
-    // Check whether course exists
-    const course = await Course.getById(courseId);
-
-    if (!course) {
-      return res.status(404).json({
-        message: "Course not found",
-      });
-    }
-
-    // Check whether student is already enrolled
-    const existingEnrollment =
-      await Enrollment.findByStudentAndCourse(
-        studentId,
-        courseId
-      );
-
-    if (existingEnrollment) {
-      return res.status(409).json({
-        message: "You are already enrolled in this course",
-      });
-    }
-
-    // Create enrollment
-    const enrollmentId = await Enrollment.create(
+    // Atomic enrollment with database transaction & capacity check (FR-026 - FR-034)
+    const result = await Enrollment.enrollWithCapacityCheck(
       studentId,
       courseId
     );
 
+    if (!result.success) {
+      return res.status(result.status).json({
+        message: result.message,
+      });
+    }
+
     res.status(201).json({
-      message: "Course enrollment successful",
-      enrollmentId,
+      message: result.message,
+      enrollmentId: result.enrollmentId,
     });
 
   } catch (error) {

@@ -53,7 +53,7 @@ const getCourseById = async (req, res) => {
 // Create course
 const createCourse = async (req, res) => {
   try {
-    // Validate request body using reusable validation helper
+    // Validate request body using reusable validation helper (including CR-007 max_students capacity validation)
     const validation = await validateCourse(req.body);
 
     if (!validation.isValid) {

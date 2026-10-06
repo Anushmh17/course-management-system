@@ -18,6 +18,7 @@ async function validateCourse(courseData = {}, courseId = null) {
   const image = typeof courseData.image === "string" ? courseData.image.trim() : "";
   const description = typeof courseData.description === "string" ? courseData.description.trim() : "";
   const rawPrice = courseData.price;
+  const rawMaxStudents = courseData.max_students;
 
   // 2. Validate Course Title (FR-002, AC-001, AC-002, FR-009, AC-009)
   if (!title) {
@@ -107,6 +108,44 @@ async function validateCourse(courseData = {}, courseId = null) {
     errors.description = "Description cannot exceed 1,000 characters";
   }
 
+  // 9. Validate Maximum Students (Optional) (FR-001 - FR-004, FR-013 - FR-017, SEC-005 - SEC-007)
+  let parsedMaxStudents = null;
+  if (
+    rawMaxStudents !== undefined &&
+    rawMaxStudents !== null &&
+    rawMaxStudents !== "" &&
+    !(typeof rawMaxStudents === "string" && rawMaxStudents.trim() === "")
+  ) {
+    const strVal = String(rawMaxStudents).trim();
+    const numVal = Number(strVal);
+
+    // Must be a positive integer
+    const isInteger =
+      /^[1-9]\d*$/.test(strVal) &&
+      Number.isInteger(numVal) &&
+      typeof rawMaxStudents !== "boolean";
+
+    if (!isInteger || numVal <= 0) {
+      errors.max_students = "Maximum students must be a positive integer";
+    } else {
+      parsedMaxStudents = numVal;
+
+      // If updating, capacity cannot be reduced below current approved enrollment count
+      if (courseId !== null && courseId !== undefined) {
+        let currentEnrollments = 0;
+        if (typeof Course.getEnrollmentCount === "function") {
+          currentEnrollments = await Course.getEnrollmentCount(courseId);
+        }
+        if (parsedMaxStudents < currentEnrollments) {
+          errors.max_students = `Capacity cannot be less than the current enrollment count (${currentEnrollments})`;
+        }
+      }
+    }
+  } else {
+    // Blank/empty/null/undefined -> treated as NULL (unlimited capacity)
+    parsedMaxStudents = null;
+  }
+
   // Sanitized trimmed data for saving
   const normalizedDuration = duration ? duration.replace(/\s+/, " ") : "";
   const sanitizedData = {
@@ -117,6 +156,7 @@ async function validateCourse(courseData = {}, courseId = null) {
     price: Number(rawPrice),
     image: image || null,
     description: description || null,
+    max_students: parsedMaxStudents,
   };
 
   return {
