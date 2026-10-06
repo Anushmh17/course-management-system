@@ -11,6 +11,7 @@ import Footer from "../components/Footer";
 function MyEnrollments() {
 
   const [enrollments, setEnrollments] = useState([]);
+  const [sortBy, setSortBy] = useState("newest");
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -54,6 +55,43 @@ function MyEnrollments() {
 
     return new Date(value).toLocaleDateString();
   };
+
+  const totalCourses = enrollments.length;
+  const totalValue = enrollments.reduce((acc, enrollment) => {
+    const price = Number(enrollment.price);
+    return acc + (isNaN(price) ? 0 : price);
+  }, 0);
+  const averagePrice = totalCourses > 0 ? (totalValue / totalCourses).toFixed(2) : 0;
+  const distinctCategories = new Set(enrollments.map((e) => e.category).filter(Boolean)).size;
+
+  const getSortedEnrollments = () => {
+    const sorted = [...enrollments];
+    sorted.sort((a, b) => {
+      switch (sortBy) {
+        case "newest":
+          return new Date(b.enrolled_at) - new Date(a.enrolled_at);
+        case "oldest":
+          return new Date(a.enrolled_at) - new Date(b.enrolled_at);
+        case "price-high-low": {
+          const pA = isNaN(Number(a.price)) ? 0 : Number(a.price);
+          const pB = isNaN(Number(b.price)) ? 0 : Number(b.price);
+          return pB - pA;
+        }
+        case "price-low-high": {
+          const pA = isNaN(Number(a.price)) ? 0 : Number(a.price);
+          const pB = isNaN(Number(b.price)) ? 0 : Number(b.price);
+          return pA - pB;
+        }
+        case "title-a-z":
+          return (a.title || "").localeCompare(b.title || "");
+        default:
+          return 0;
+      }
+    });
+    return sorted;
+  };
+
+  const sortedEnrollments = getSortedEnrollments();
 
 
   return (
@@ -113,13 +151,41 @@ function MyEnrollments() {
         )}
 
 
+        {/* ---------- Summary & Sorting ---------- */}
+
+        {!loading && !error && (
+          <div className="enrollments-summary-sorting" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap' }}>
+            <div className="summary-stats">
+              <p>Total Enrolled Courses: {totalCourses}</p>
+              <p>Total Value: Rs. {totalValue}</p>
+              <p>Average Price: Rs. {averagePrice}</p>
+              <p>Distinct Categories: {distinctCategories}</p>
+            </div>
+            
+            <div className="sort-controls">
+              <label htmlFor="sort-by" style={{ marginRight: '10px' }}>Sort By:</label>
+              <select 
+                id="sort-by" 
+                value={sortBy} 
+                onChange={(e) => setSortBy(e.target.value)}
+              >
+                <option value="newest">Newest Enrolled</option>
+                <option value="oldest">Oldest Enrolled</option>
+                <option value="price-high-low">Price: High to Low</option>
+                <option value="price-low-high">Price: Low to High</option>
+                <option value="title-a-z">Course Title: A to Z</option>
+              </select>
+            </div>
+          </div>
+        )}
+
         {/* ---------- Enrollment cards ---------- */}
 
         {!loading && !error && enrollments.length > 0 && (
 
           <div className="course-grid">
 
-            {enrollments.map((enrollment) => (
+            {sortedEnrollments.map((enrollment) => (
 
               <article className="course-card" key={enrollment.id}>
 

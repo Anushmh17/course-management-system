@@ -70,6 +70,10 @@ function StudentDashboard() {
     return new Date(value).toLocaleDateString();
   };
 
+  const totalValue = enrollments.reduce((acc, enrollment) => {
+    const price = Number(enrollment.price);
+    return acc + (isNaN(price) ? 0 : price);
+  }, 0);
 
   return (
 
@@ -131,6 +135,15 @@ function StudentDashboard() {
             </span>
             <span className="dashboard-card-label">
               Registered Students
+            </span>
+          </div>
+
+          <div className="dashboard-card">
+            <span className="dashboard-card-value">
+              {loading ? "..." : `Rs. ${totalValue}`}
+            </span>
+            <span className="dashboard-card-label">
+              Total Enrolled Value
             </span>
           </div>
 
