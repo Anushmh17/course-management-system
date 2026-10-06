@@ -20,7 +20,9 @@ function CourseDetails() {
   const [success, setSuccess] = useState("");
 
   const [enrolling, setEnrolling] = useState(false);
-
+  const [cancelling, setCancelling] = useState(false);
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [enrollmentId, setEnrollmentId] = useState(null);
 
   // Read the login state from localStorage.
   const loggedIn = isLoggedIn();
@@ -39,10 +41,10 @@ function CourseDetails() {
 
         setCourse(response.data.course);
 
-      } catch (error) {
+      } catch (err) {
 
         setError(
-          error.response?.data?.message ||
+          err.response?.data?.message ||
           "Failed to load course"
         );
 
@@ -56,6 +58,28 @@ function CourseDetails() {
     getCourse();
 
   }, [id]);
+
+
+  // ---------- Check whether logged-in student is already enrolled ----------
+  useEffect(() => {
+    if (studentLoggedIn) {
+      api
+        .get("/enrollments/my")
+        .then((res) => {
+          const match = res.data.enrollments?.find(
+            (e) => String(e.course_id) === String(id)
+          );
+          if (match) {
+            setIsEnrolled(true);
+            setEnrollmentId(match.id);
+          } else {
+            setIsEnrolled(false);
+            setEnrollmentId(null);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [id, studentLoggedIn]);
 
 
   // ---------- Enroll ----------
@@ -72,21 +96,24 @@ function CourseDetails() {
         courseId: id,
       });
 
-      setSuccess(response.data.message);
+      setSuccess(response.data.message || "Enrolled successfully!");
+      setIsEnrolled(true);
+      setEnrollmentId(response.data.enrollmentId);
 
-    } catch (error) {
+    } catch (err) {
 
       // 409 = already enrolled. This is expected, not a crash.
-      if (error.response?.status === 409) {
+      if (err.response?.status === 409) {
 
         setError(
           "You are already enrolled in this course. You can see it in My Enrollments."
         );
+        setIsEnrolled(true);
 
       } else {
 
         setError(
-          error.response?.data?.message ||
+          err.response?.data?.message ||
           "Enrollment failed. Please try again."
         );
 
@@ -96,6 +123,35 @@ function CourseDetails() {
 
       setEnrolling(false);
 
+    }
+  };
+
+
+  // ---------- Cancel Enrollment ----------
+  const handleCancelEnrollment = async () => {
+    if (!enrollmentId) return;
+
+    const isConfirmed = window.confirm(
+      "Are you sure you want to cancel your enrollment in this course?"
+    );
+    if (!isConfirmed) return;
+
+    setError("");
+    setSuccess("");
+    setCancelling(true);
+
+    try {
+      const res = await api.delete(`/enrollments/my/${enrollmentId}`);
+      setSuccess(res.data?.message || "Enrollment cancelled successfully.");
+      setIsEnrolled(false);
+      setEnrollmentId(null);
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          "Failed to cancel enrollment. Please try again."
+      );
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -235,23 +291,62 @@ function CourseDetails() {
               )}
 
 
-              {/* Logged in as a student: show the Enroll button */}
+              {/* Logged in as a student: show enrolled or enroll button */}
               {studentLoggedIn && (
                 <>
-                  <button
-                    type="button"
-                    className="btn btn-primary btn-lg"
-                    onClick={handleEnroll}
-                    disabled={enrolling}
-                  >
-                    <FaShoppingCart />
-                    {enrolling ? "Enrolling..." : "Enroll Now"}
-                  </button>
+                  {isEnrolled ? (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                      <div
+                        style={{
+                          padding: "10px 16px",
+                          backgroundColor: "var(--color-success-bg, #dcfce7)",
+                          color: "var(--color-success-text, #166534)",
+                          border: "1px solid #bbf7d0",
+                          borderRadius: "6px",
+                          fontWeight: "600",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          width: "fit-content",
+                        }}
+                      >
+                        ✓ Enrolled in this course
+                      </div>
 
-                  <Link to="/my-enrollments" className="btn btn-outline">
-                    <FaGraduationCap />
-                    My Enrollments
-                  </Link>
+                      <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginTop: "4px" }}>
+                        <Link to="/my-enrollments" className="btn btn-outline">
+                          <FaGraduationCap />
+                          My Enrollments
+                        </Link>
+
+                        <button
+                          type="button"
+                          className="btn btn-danger"
+                          onClick={handleCancelEnrollment}
+                          disabled={cancelling}
+                        >
+                          {cancelling ? "Cancelling..." : "Cancel Enrollment"}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-lg"
+                        onClick={handleEnroll}
+                        disabled={enrolling}
+                      >
+                        <FaShoppingCart />
+                        {enrolling ? "Enrolling..." : "Enroll Now"}
+                      </button>
+
+                      <Link to="/my-enrollments" className="btn btn-outline">
+                        <FaGraduationCap />
+                        My Enrollments
+                      </Link>
+                    </>
+                  )}
                 </>
               )}
 

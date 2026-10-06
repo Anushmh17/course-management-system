@@ -15,6 +15,8 @@ function MyEnrollments() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [cancellingId, setCancellingId] = useState(null);
 
   const user = getUser();
 
@@ -30,10 +32,10 @@ function MyEnrollments() {
 
         setEnrollments(response.data.enrollments);
 
-      } catch (error) {
+      } catch (err) {
 
         setError(
-          error.response?.data?.message ||
+          err.response?.data?.message ||
           "Failed to load your enrollments"
         );
 
@@ -47,6 +49,37 @@ function MyEnrollments() {
     getEnrollments();
 
   }, []);
+
+
+  // Handle self-service enrollment cancellation
+  const handleCancelEnrollment = async (enrollmentId) => {
+    const isConfirmed = window.confirm(
+      "Are you sure you want to cancel this enrollment?"
+    );
+
+    if (!isConfirmed) return;
+
+    setError("");
+    setSuccessMessage("");
+    setCancellingId(enrollmentId);
+
+    try {
+      const response = await api.delete(`/enrollments/my/${enrollmentId}`);
+      setSuccessMessage(
+        response.data?.message || "Enrollment cancelled successfully."
+      );
+
+      // Refresh list without full page reload
+      setEnrollments((prev) => prev.filter((e) => e.id !== enrollmentId));
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          "Failed to cancel enrollment. Please try again."
+      );
+    } finally {
+      setCancellingId(null);
+    }
+  };
 
 
   // Format "2026-09-21T10:15:00.000Z" into a readable date
@@ -128,6 +161,27 @@ function MyEnrollments() {
         )}
 
 
+        {/* ---------- Success message ---------- */}
+
+        {successMessage && (
+          <div
+            className="alert alert-success"
+            role="alert"
+            style={{
+              padding: "12px 16px",
+              marginBottom: "20px",
+              backgroundColor: "var(--color-success-bg, #dcfce7)",
+              color: "var(--color-success-text, #166534)",
+              border: "1px solid #bbf7d0",
+              borderRadius: "8px",
+              fontWeight: "500",
+            }}
+          >
+            {successMessage}
+          </div>
+        )}
+
+
         {/* ---------- Error ---------- */}
 
         {error && !loading && (
@@ -153,7 +207,7 @@ function MyEnrollments() {
 
         {/* ---------- Summary & Sorting ---------- */}
 
-        {!loading && !error && (
+        {!loading && !error && enrollments.length > 0 && (
           <div className="enrollments-summary-sorting" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap' }}>
             <div className="summary-stats">
               <p>Total Enrolled Courses: {totalCourses}</p>
@@ -238,12 +292,26 @@ function MyEnrollments() {
                   </ul>
 
 
-                  <Link
-                    to={`/courses/${enrollment.course_id}`}
-                    className="btn btn-outline btn-block"
-                  >
-                    View Course
-                  </Link>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "14px" }}>
+                    <Link
+                      to={`/courses/${enrollment.course_id}`}
+                      className="btn btn-outline btn-block"
+                    >
+                      View Course
+                    </Link>
+
+                    <button
+                      type="button"
+                      className="btn btn-danger btn-block"
+                      onClick={() => handleCancelEnrollment(enrollment.id)}
+                      disabled={cancellingId === enrollment.id}
+                      aria-label={`Cancel enrollment for ${enrollment.title}`}
+                    >
+                      {cancellingId === enrollment.id
+                        ? "Cancelling..."
+                        : "Cancel Enrollment"}
+                    </button>
+                  </div>
 
                 </div>
 

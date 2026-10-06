@@ -118,6 +118,17 @@ const Enrollment = {
     return result;
   },
 
+  // Student cancel enrollment (verifies both enrollment ID and student ID)
+  async cancelByStudent(enrollmentId, studentId) {
+    const [result] = await db.execute(
+      `DELETE FROM enrollments
+       WHERE id = ? AND student_id = ?`,
+      [enrollmentId, studentId]
+    );
+
+    return result;
+  },
+
 };
 
 module.exports = Enrollment;
