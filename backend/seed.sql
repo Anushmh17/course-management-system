@@ -176,24 +176,24 @@ VALUES
 );
 
 
--- Seed Enrollments
+-- Seed Enrollments (CR-011: existing enrollments migrated to approved status)
 INSERT INTO enrollments
-(student_id, course_id)
+(student_id, course_id, status, reviewed_by, reviewed_at)
 VALUES
 
 -- Kamal (Student 2)
-(2, 1),   -- Kamal -> HTML & CSS
-(2, 2),   -- Kamal -> JavaScript
-(2, 6),   -- Kamal -> MySQL
-(2, 8),   -- Kamal -> Git & GitHub
+(2, 1, 'approved', 1, CURRENT_TIMESTAMP),   -- Kamal -> HTML & CSS
+(2, 2, 'approved', 1, CURRENT_TIMESTAMP),   -- Kamal -> JavaScript
+(2, 6, 'approved', 1, CURRENT_TIMESTAMP),   -- Kamal -> MySQL
+(2, 8, 'approved', 1, CURRENT_TIMESTAMP),   -- Kamal -> Git & GitHub
 
 -- Nimal (Student 3)
-(3, 3),   -- Nimal -> Node.js
-(3, 4),   -- Nimal -> Express.js
-(3, 5),   -- Nimal -> MongoDB
-(3, 9),   -- Nimal -> Python Programming
+(3, 3, 'approved', 1, CURRENT_TIMESTAMP),   -- Nimal -> Node.js
+(3, 4, 'approved', 1, CURRENT_TIMESTAMP),   -- Nimal -> Express.js
+(3, 5, 'approved', 1, CURRENT_TIMESTAMP),   -- Nimal -> MongoDB
+(3, 9, 'approved', 1, CURRENT_TIMESTAMP),   -- Nimal -> Python Programming
 
 -- Saman (Student 4)
-(4, 2),   -- Saman -> JavaScript
-(4, 7),   -- Saman -> React
-(4, 10);  -- Saman -> Full Stack Web Development
+(4, 2, 'approved', 1, CURRENT_TIMESTAMP),   -- Saman -> JavaScript
+(4, 7, 'approved', 1, CURRENT_TIMESTAMP),   -- Saman -> React
+(4, 10, 'approved', 1, CURRENT_TIMESTAMP);  -- Saman -> Full Stack Web Development

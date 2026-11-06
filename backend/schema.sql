@@ -47,6 +47,16 @@ CREATE TABLE IF NOT EXISTS enrollments (
 
     course_id INT NOT NULL,
 
+    status ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
+
+    reviewed_by INT NULL,
+
+    reviewed_at TIMESTAMP NULL DEFAULT NULL,
+
+    rejection_reason TEXT NULL,
+
+    decision_note TEXT NULL,
+
     enrolled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     -- A student cannot enroll in the same course twice
@@ -62,5 +72,11 @@ CREATE TABLE IF NOT EXISTS enrollments (
     FOREIGN KEY (course_id)
         REFERENCES courses(id)
         ON DELETE CASCADE
+        ON UPDATE CASCADE,
+
+    -- Reviewer (admin)
+    FOREIGN KEY (reviewed_by)
+        REFERENCES users(id)
+        ON DELETE SET NULL
         ON UPDATE CASCADE
 );

@@ -4,6 +4,7 @@ const router = express.Router();
 
 const {
   enrollInCourse,
+  updateEnrollmentStatus,
   getMyEnrollments,
   getCourseEnrollments,
   getAllEnrollments,
@@ -62,6 +63,25 @@ router.get(
   authMiddleware,
   roleMiddleware(["admin"]),
   getCourseEnrollments
+);
+
+
+// Admin (JWT + admin role required)
+// Approve or reject an enrollment request (CR-011 API Requirements)
+router.patch(
+  "/:id/status",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  updateEnrollmentStatus
+);
+
+
+// Support PUT as well for API convenience
+router.put(
+  "/:id/status",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  updateEnrollmentStatus
 );
 
 

@@ -4,7 +4,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node test-validation.js"
+    "test": "node test-validation.js",
+    "test:cr011": "node test-cr011.js"
   },
   "author": "",
   "license": "ISC",

@@ -25,14 +25,14 @@ const Course = {
   // Format helper attached for reuse
   formatCourseCapacity,
 
-  // Get all courses with enrollment count and capacity info
+  // Get all courses with enrollment count and capacity info (counts approved enrollments only - CR-011)
   async getAll() {
     const [rows] = await db.execute(
       `SELECT 
          c.*,
          CAST(COUNT(e.id) AS UNSIGNED) AS enrolled_count
        FROM courses c
-       LEFT JOIN enrollments e ON c.id = e.course_id
+       LEFT JOIN enrollments e ON c.id = e.course_id AND e.status = 'approved'
        GROUP BY c.id
        ORDER BY c.id ASC`
     );
@@ -40,14 +40,14 @@ const Course = {
     return rows.map(formatCourseCapacity);
   },
 
-  // Get one course by ID with enrollment count and capacity info
+  // Get one course by ID with enrollment count and capacity info (counts approved enrollments only - CR-011)
   async getById(id) {
     const [rows] = await db.execute(
       `SELECT 
          c.*,
          CAST(COUNT(e.id) AS UNSIGNED) AS enrolled_count
        FROM courses c
-       LEFT JOIN enrollments e ON c.id = e.course_id
+       LEFT JOIN enrollments e ON c.id = e.course_id AND e.status = 'approved'
        WHERE c.id = ?
        GROUP BY c.id`,
       [id]
@@ -71,10 +71,10 @@ const Course = {
     return rows[0] || null;
   },
 
-  // Get current enrollment count for a course
+  // Get current enrollment count for a course (counts approved enrollments only - CR-011)
   async getEnrollmentCount(id) {
     const [rows] = await db.execute(
-      "SELECT COUNT(*) AS count FROM enrollments WHERE course_id = ?",
+      "SELECT COUNT(*) AS count FROM enrollments WHERE course_id = ? AND status = 'approved'",
       [id]
     );
     return Number(rows[0]?.count || 0);

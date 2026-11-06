@@ -7,11 +7,8 @@ import { getUser } from "../services/auth";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
-
 function StudentDashboard() {
-
   const [enrollments, setEnrollments] = useState([]);
-
   const [stats, setStats] = useState({
     courseCount: 0,
     studentCount: 0,
@@ -22,13 +19,9 @@ function StudentDashboard() {
 
   const user = getUser();
 
-
   useEffect(() => {
-
     const loadDashboard = async () => {
-
       try {
-
         const [enrollmentsResponse, statsResponse] = await Promise.all([
           api.get("/enrollments/my"),
           api.get("/courses/stats"),
@@ -40,55 +33,46 @@ function StudentDashboard() {
           courseCount: statsResponse.data.courseCount,
           studentCount: statsResponse.data.studentCount,
         });
-
-      } catch (error) {
-
+      } catch (err) {
         setError(
-          error.response?.data?.message ||
+          err.response?.data?.message ||
           "Failed to load your dashboard"
         );
-
       } finally {
-
         setLoading(false);
-
       }
     };
 
     loadDashboard();
-
   }, []);
 
+  // CR-011: Ensure pending enrollments are not counted as confirmed enrollments
+  const approvedEnrollments = enrollments.filter((e) => e.status === "approved");
+  const pendingEnrollments = enrollments.filter((e) => e.status === "pending");
 
-  // Only show the 3 most recent enrollments on the dashboard
-  const recentEnrollments = enrollments.slice(0, 3);
-
+  // Only show the 5 most recent enrollments on the dashboard
+  const recentEnrollments = enrollments.slice(0, 5);
 
   const formatDate = (value) => {
     if (!value) return "-";
-
     return new Date(value).toLocaleDateString();
   };
 
-  const totalValue = enrollments.reduce((acc, enrollment) => {
+  // Only sum value of confirmed / approved courses
+  const totalValue = approvedEnrollments.reduce((acc, enrollment) => {
     const price = Number(enrollment.price);
     return acc + (isNaN(price) ? 0 : price);
   }, 0);
 
   return (
-
     <>
       <Navbar />
 
       <div className="container">
-
         {/* ---------- Welcome ---------- */}
-
         <div className="page-header">
-
           <div>
             <h1>Student Dashboard</h1>
-
             <p className="page-subtitle">
               Welcome back, {user?.full_name || user?.username}!
             </p>
@@ -98,25 +82,38 @@ function StudentDashboard() {
             <FaSearch />
             Browse Courses
           </Link>
-
         </div>
 
-
         {/* ---------- Error ---------- */}
-
         {error && <p className="error">{error}</p>}
 
-
-        {/* ---------- Stat cards ---------- */}
-
+        {/* ---------- Stat cards (CR-011 updated counters) ---------- */}
         <div className="dashboard-grid">
-
           <div className="dashboard-card">
             <span className="dashboard-card-value">
-              {loading ? "..." : enrollments.length}
+              {loading ? "..." : approvedEnrollments.length}
             </span>
             <span className="dashboard-card-label">
-              My Enrolled Courses
+              Enrolled Courses (Confirmed)
+            </span>
+          </div>
+
+          <div
+            className="dashboard-card"
+            style={
+              pendingEnrollments.length > 0
+                ? { borderColor: "#fde68a", backgroundColor: "#fffbeb" }
+                : {}
+            }
+          >
+            <span
+              className="dashboard-card-value"
+              style={pendingEnrollments.length > 0 ? { color: "#b45309" } : {}}
+            >
+              {loading ? "..." : pendingEnrollments.length}
+            </span>
+            <span className="dashboard-card-label">
+              Pending Approval
             </span>
           </div>
 
@@ -131,48 +128,32 @@ function StudentDashboard() {
 
           <div className="dashboard-card">
             <span className="dashboard-card-value">
-              {loading ? "..." : stats.studentCount}
-            </span>
-            <span className="dashboard-card-label">
-              Registered Students
-            </span>
-          </div>
-
-          <div className="dashboard-card">
-            <span className="dashboard-card-value">
               {loading ? "..." : `Rs. ${totalValue}`}
             </span>
             <span className="dashboard-card-label">
               Total Enrolled Value
             </span>
           </div>
-
         </div>
 
-
         {/* ---------- Recent enrollments ---------- */}
-
         <section className="section-card">
-
           <div className="section-card-header">
-            <h2>My Recent Enrollments</h2>
+            <h2>My Recent Enrollments & Requests</h2>
 
             <Link to="/my-enrollments" className="link-inline">
               <FaEye /> View all
             </Link>
           </div>
 
-
           {loading && <p className="loading">Loading...</p>}
-
 
           {!loading && recentEnrollments.length === 0 && (
             <p className="empty">
-              You have not enrolled in any courses yet. Head over to the
-              courses page and enroll in your first course.
+              You have not enrolled in or requested any courses yet. Head over
+              to the courses page to find a course!
             </p>
           )}
-
 
           {!loading && recentEnrollments.length > 0 && (
             <div className="table-wrapper">
@@ -182,7 +163,8 @@ function StudentDashboard() {
                     <th>Course</th>
                     <th>Category</th>
                     <th>Level</th>
-                    <th>Enrolled On</th>
+                    <th>Status</th>
+                    <th>Date</th>
                   </tr>
                 </thead>
 
@@ -196,6 +178,17 @@ function StudentDashboard() {
                       </td>
                       <td>{enrollment.category}</td>
                       <td>{enrollment.level}</td>
+                      <td>
+                        {enrollment.status === "approved" && (
+                          <span className="tag tag-approved">Approved</span>
+                        )}
+                        {enrollment.status === "pending" && (
+                          <span className="tag tag-pending">Pending</span>
+                        )}
+                        {enrollment.status === "rejected" && (
+                          <span className="tag tag-rejected">Rejected</span>
+                        )}
+                      </td>
                       <td>{formatDate(enrollment.enrolled_at)}</td>
                     </tr>
                   ))}
@@ -203,42 +196,35 @@ function StudentDashboard() {
               </table>
             </div>
           )}
-
         </section>
 
-
         {/* ---------- Quick actions ---------- */}
-
         <section className="section-card">
-
           <div className="section-card-header">
             <h2>Quick Actions</h2>
           </div>
 
           <div className="quick-actions">
-
             <Link to="/courses" className="quick-action">
-              <span className="quick-action-icon"><FaBook /></span>
+              <span className="quick-action-icon">
+                <FaBook />
+              </span>
               <span>Browse all courses</span>
             </Link>
 
             <Link to="/my-enrollments" className="quick-action">
-              <span className="quick-action-icon"><FaGraduationCap /></span>
-              <span>View my enrollments</span>
+              <span className="quick-action-icon">
+                <FaGraduationCap />
+              </span>
+              <span>View my enrollments & requests</span>
             </Link>
-
           </div>
-
         </section>
-
       </div>
 
       <Footer />
-
     </>
   );
 }
 
 export default StudentDashboard;
-
-
