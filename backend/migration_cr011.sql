@@ -23,3 +23,4 @@ FOREIGN KEY (reviewed_by)
 UPDATE enrollments
 SET status = 'approved'
 WHERE status IS NULL OR status = 'pending';
+
